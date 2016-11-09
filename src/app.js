@@ -55,29 +55,13 @@ $(document).ready(function() {
     keys = Object.keys(data[0]);
 
     result = '';
-    result += keys.reverse().join(columnDelimiter);
+    result += keys.reverse().join(columnDelimiter) + ",page_id";
     result += lineDelimiter;
 
     data.forEach(function(item) {
-      // ctr = 0;
-      // console.log(ctr + ' before');
-      // keys.forEach(function(key) {
-      //   ctr = 0;
-      //   item.likes.data.forEach(function(ele) {
-      //     result += ele.id;
-      //     ctr += 1;
-      //     console.log(ctr + ' during');
-      //     if (ctr > 0) result += columnDelimiter;
-      //     result += item[key];
-      //     // ctr += 1;
-      //     result += lineDelimiter;
-      //   });
-      //   console.log(ctr + ' after')
-      //   result += "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-      //   result += lineDelimiter;
-      // });
       item.likes.data.forEach(function(like) {
-        result += like.id + columnDelimiter + item.id + lineDelimiter;
+        console.log()
+        result += like.id + columnDelimiter + item.id.split('_').reverse() + lineDelimiter;
       })
     });
     console.log(result);
