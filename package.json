@@ -1,0 +1,19 @@
+{
+  "name": "facebook_post_likes_express",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cameronepstein/facebook_post_likes_express.git"
+  },
+  "author": "cameronepstein",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cameronepstein/facebook_post_likes_express/issues"
+  },
+  "homepage": "https://github.com/cameronepstein/facebook_post_likes_express#readme"
+}
