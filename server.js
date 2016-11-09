@@ -8,12 +8,16 @@ app.get('/index.htm', function (req, res) {
    res.sendFile(__dirname + "/" + "index.htm" );
 })
 
-app.get('/bundle.js', function(req, res) {
-  res.sendFile(__dirname + "/" + "bundle.js");
+app.get('/src/bundle.js', function(req, res) {
+  res.sendFile(__dirname + "/" + "/src/bundle.js");
 })
 
-app.get('/config.js', function(req, res) {
-  res.sendFile(__dirname + "/" + "config.js");
+app.get('/src/config.js', function(req, res) {
+  res.sendFile(__dirname + "/" + "/src/config.js");
+})
+
+app.get('/src/app.js', function(req, res) {
+  res.sendFile(__dirname + "/" + "/src/app.js");
 })
 
 app.post('/index.htm', urlencodedParser, function (req, res) {
