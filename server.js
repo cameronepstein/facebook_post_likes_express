@@ -1,13 +1,13 @@
 var express = require('express');
 var app = express();
 
-app.get('/', function (req, res) {
-   res.send('Hello World');
+app.get('/index.htm', function (req, res) {
+   res.sendFile(__dirname + "/" + "index.htm" );
 })
 
 var server = app.listen(8000, function () {
-   var host = server.address().address
-   var port = server.address().port
+  var host = server.address().address;
+  var port = server.address().port;
 
-   console.log("Application listening at http://%s:%s", host, port)
+  console.log("Application listening at http://%s:%s", host, port)
 })
