@@ -5,6 +5,32 @@
     <title>Facebook Post Likes</title>
   </head>
   <body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <script src="bundle.js"></script>
+    <script src="config.js"></script>
+
+    <!-- Form for users choice of facebook page -->
+
+    <form action = "http://localhost:8000/process_post" method = "POST">
+         Page Name: <input type = "text" name = "page_name">
+         <input type = "submit" value = "Submit">
+      </form>
+
+    <!-- FACEBOOK API CALL FOR PAGES POSTS -->
+    <script>
+      var facebookKey = config.FACEBOOK_KEY;
+
+      $(document).ready(function() {
+        getPostLikes = function() {
+          $.get("https://graph.facebook.com/v2.8/?fields=posts%7Blikes%7Bid%7D%7D&access_token=" + facebookKey,function (data) {
+            console.log(data);
+          });
+        };
+        getPostLikes();
+      })
+    </script>
+
+
     <h1>Hello World</h1>
   </body>
 </html>
