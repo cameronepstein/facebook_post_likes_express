@@ -13,7 +13,27 @@ $(document).ready(function() {
       // })
       // console.log(postArray);
 
-      convertArrayOfObjectsToCSV(postArray);
+      // console.log(postArray);
+      function downloadCSV(args) {
+        var data, filename, link;
+        var csv = convertArrayOfObjectsToCSV(postArray);
+
+        if (csv == null) return;
+
+        filename = args.filename || 'export.csv';
+
+        if (!csv.match(/^data:text\/csv/i)) {
+          csv = 'data:text/csv;charset=utf-8,' + csv;
+        }
+        data = encodeURI(csv);
+
+        link = document.createElement('a');
+        link.setAttribute('href', data);
+        link.setAttribute('download', filename);
+        link.click();
+      }
+      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
+      downloadCSV(convertedPostCSV);
     });
   };
   getPostLikes();
@@ -46,8 +66,7 @@ $(document).ready(function() {
       });
       result += lineDelimiter;
     });
-
-    console.log(result);
     return result;
     }
+
   })
