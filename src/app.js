@@ -11,7 +11,8 @@ $(document).ready(function() {
       // postArray.forEach(function(singlePost) {
       //   console.log(singlePost);
       // })
-      // console.log(postArray);
+      // console.log(postArray)
+      // console.log(convertArrayOfObjectsToCSV(postArray));
 
       // console.log(postArray);
       function downloadCSV(args) {
@@ -54,19 +55,32 @@ $(document).ready(function() {
     keys = Object.keys(data[0]);
 
     result = '';
-    result += keys.join(columnDelimiter);
+    result += keys.reverse().join(columnDelimiter);
     result += lineDelimiter;
 
     data.forEach(function(item) {
-      ctr = 0;
-      keys.forEach(function(key) {
-        if (ctr > 0) result += columnDelimiter;
-        result += item[key];
-        ctr++;
-      });
-      result += lineDelimiter;
+      // ctr = 0;
+      // console.log(ctr + ' before');
+      // keys.forEach(function(key) {
+      //   ctr = 0;
+      //   item.likes.data.forEach(function(ele) {
+      //     result += ele.id;
+      //     ctr += 1;
+      //     console.log(ctr + ' during');
+      //     if (ctr > 0) result += columnDelimiter;
+      //     result += item[key];
+      //     // ctr += 1;
+      //     result += lineDelimiter;
+      //   });
+      //   console.log(ctr + ' after')
+      //   result += "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
+      //   result += lineDelimiter;
+      // });
+      item.likes.data.forEach(function(like) {
+        result += like.id + columnDelimiter + item.id + lineDelimiter;
+      })
     });
+    console.log(result);
     return result;
-    }
-
-  })
+  }
+})
