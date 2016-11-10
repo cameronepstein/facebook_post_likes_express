@@ -3,6 +3,7 @@ var facebookKey = config.FACEBOOK_KEY;
 // ASSIGN QUERY TO VARIABLE
 
 var likePage = getQueryVariable("likePage");
+var sinceDate = getQueryVariable("sinceDate");
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -16,18 +17,75 @@ function getQueryVariable(variable) {
   alert("Query Variable " + variable + " not found");
 }
 
-console.log(likePage);
+console.log("Page Search: " + likePage);
+console.log("Since: " + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE 1078649600
 
 $(document).ready(function() {
   getPostLikes = function(response) {
-    $.get("https://graph.facebook.com/v2.8/" + likePage + "?fields=access_token,posts.since(1078649600){likes{id}}&access_token=" + facebookKey,function (data) {
-        var postArray = []
-        postArray.push(data.posts.data);
-        data.posts.paging.next;
+    $.get("https://graph.facebook.com/v2.8/" + likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey,function (facebookData) {
+        // while (data.posts.paging.next !== 'undefined') {
+        var postArray = [];
+        var nextPage = facebookData.posts.paging.next;
+        console.log(facebookData.posts.data[0]);
+        console.log(facebookData.posts.paging.include(next))
+        var check = 0;
 
+        postArray.push(facebookData.posts.data);
+
+        do {
+          $.get(nextPage, function(nextPageData) {
+            postArray.push(nextPageData.data);
+            nextPage = nextPageData.paging.next;
+            console.log(nextPageData.data[0]);
+          });
+        } while (facebookData.posts.data.length == 0); //FIX THIS WHILE LOOOOOOOOOOOOPP CONDITION!!!!!!!!!!!
+
+        // ----------!
+        // getNextPagePostLikes = function (response) {
+        //   $.get(nextPage, function(nextPageData) {
+        //     for (var i = 0; i < nextPageData.data.length; i++) {
+        //       console.log(nextPageData.data.posts.data)
+        //       postArray.push(nextPageData.posts.data);
+        //     }
+        //     console.log(nextPageData)
+        //     if (nnextPageData.paging && nnextPageData.paging.next) {
+        //       getNextPagePostLikes(nextPageData.paging.next);
+        //     } else {}
+        //     console.log("no more items");
+        //   });
+        // }
+        // getNextPagePostLikes();
+        //-------------!
+        // console.log(data)
+        // while (data.posts.paging.next.length != 0) {
+        // while (data.posts/data.length != 0) {
+        //  while (data.posts.paging.hasOwnProperty('next') && check < 5) {
+        // ----------- Old Try
+        // searchNextPage = function(response) {
+        //   $.get(nextPage, function (data) {
+        //     console.log(data);
+        //     postArray.push(data.posts.data);
+        //     nextPage = data.posts.paging.next;
+        //   });
+        //   // console.log(nextPage);
+        //   check += 1;
+        // };
+        // searchNextPage();
+        // -----------------------
+        // };
+        // while (indexOf(paging) !== []) {
+        // }
         // AUTO-DOWNLOAD CSV FILE ON DOCUMENT READY
+      // console.log(data.posts.data.length)
+      // while (data.posts.data != [] ) {
+      //   $.get(nextPage, function(nextPageData) {
+      //     postArray.push(data.posts.data);
+      //     nextPage = data.posts.paging.next;
+      //     // console.log(nextPagedata.posts)
+      //   });
+      // }
 
       function downloadCSV(args) {
         var data, filename, link;
@@ -49,9 +107,9 @@ $(document).ready(function() {
       }
       var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
       downloadCSV(convertedPostCSV);
-      console.log('ey')
     });
   };
+  console.log("Downloading...")
   getPostLikes();
 
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
