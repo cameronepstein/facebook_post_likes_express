@@ -1,20 +1,16 @@
 var facebookKey = config.FACEBOOK_KEY;
 
-// FIND ALL POST DATA FOR DOJOAPP FACEBOOK PAGE
+// FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE 1078649600
 
 $(document).ready(function() {
-  getPostLikes = function() {
-    $.get("https://graph.facebook.com/v2.8/thedojoapp?fields=posts%7Blikes%7Bid%7D%7D&access_token=" + facebookKey,function (data) {
-      var postArray = data.posts.data;
+  getPostLikes = function(response) {
+    $.get("https://graph.facebook.com/v2.8/thedojoapp?fields=access_token%2Cposts.since(1078649600)%7Blikes%7Bid%7D%7D&access_token=" + facebookKey,function (data) {
+        var postArray = []
+        postArray.push(data.posts.data);
+        data.posts.paging.next;
 
-      // Seperate posts by ID
-      // postArray.forEach(function(singlePost) {
-      //   console.log(singlePost);
-      // })
-      // console.log(postArray)
-      // console.log(convertArrayOfObjectsToCSV(postArray));
+        // AUTO-DOWNLOAD CSV FILE ON DOCUMENT READY
 
-      // console.log(postArray);
       function downloadCSV(args) {
         var data, filename, link;
         var csv = convertArrayOfObjectsToCSV(postArray);
@@ -35,6 +31,7 @@ $(document).ready(function() {
       }
       var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
       downloadCSV(convertedPostCSV);
+      console.log('ey')
     });
   };
   getPostLikes();
@@ -55,16 +52,18 @@ $(document).ready(function() {
     keys = Object.keys(data[0]);
 
     result = '';
-    result += keys.reverse().join(columnDelimiter) + ",page_id";
+    result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
     result += lineDelimiter;
 
     data.forEach(function(item) {
-      item.likes.data.forEach(function(like) {
-        console.log()
-        result += like.id + columnDelimiter + item.id.split('_').reverse() + lineDelimiter;
+      item.forEach(function(post) {
+        var likeArray = post.likes
+        likeArray.data.forEach(function(like) {
+          result += like.id + columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
+        })
       })
     });
-    console.log(result);
+
     return result;
   }
 })
