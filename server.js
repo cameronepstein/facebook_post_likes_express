@@ -29,6 +29,10 @@ app.post('/index.htm', urlencodedParser, function (req, res) {
    res.end(JSON.stringify(response));
 })
 
+app.get('/request.htm', function(req, res) {
+  res.sendFile(__dirname + "/" + "/request.htm");
+})
+
 
 var server = app.listen(8000, function () {
   var host = server.address().address;
