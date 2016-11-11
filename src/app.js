@@ -29,18 +29,33 @@ $(document).ready(function() {
         var postArray = [];
         var nextPage = facebookData.posts.paging.next;
         console.log(facebookData.posts.data[0]);
-        console.log(facebookData.posts.paging.include(next))
+        // console.log(facebookData.posts.paging.include(next))
         var check = 0;
 
         postArray.push(facebookData.posts.data);
 
+        // test = function (url) {
+        //   var nextUrl = ""
+        //   $.get(url, function(nextPageData) {
+        //     postArray.push(nextPageData.data);
+        //     nextUrl = nextPageData.paging;
+        //     console.log(nextPageData)
+        //   })
+        //   return nextUrl
+        // }
+        // test();
+        var currentDataLength = "cat"
         do {
           $.get(nextPage, function(nextPageData) {
             postArray.push(nextPageData.data);
-            nextPage = nextPageData.paging.next;
-            console.log(nextPageData.data[0]);
+            console.log(nextPageData.data)
+            var nextPage = nextPageData.paging.next;
+            // console.log(nextPageData.data[0]);
+            // console.log(facebookData.posts.data.length);
+            currentDataLength = nextPageData.data.length;
+            console.log(nextPageData.data)
           });
-        } while (facebookData.posts.data.length == 0); //FIX THIS WHILE LOOOOOOOOOOOOPP CONDITION!!!!!!!!!!!
+        } while (currentDataLength == 0); //FIX THIS WHILE LOOOOOOOOOOOOPP CONDITION!!!!!!!!!!!
 
         // ----------!
         // getNextPagePostLikes = function (response) {
