@@ -5,14 +5,41 @@
     <title>Facebook Post Likes</title>
   </head>
   <body>
+
     <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
     <script src="/src/bundle.js"></script>
     <script src="/src/config.js"></script> -->
     <!-- Form for users choice of facebook page -->
+    <style type="text/css">
+    body {
+      background-color: black;
+      }
+    h2 {
+      color: white;
+      font-family: "Helvetica";
+      font-size: 30px;
+      text-align: center;
+    }
+    input {
+      display: block;
+      width: 50%;
+      font-family: sans-serif;
+      font-size: 18px;
+      appearance: none;
+      box-shadow: none;
+      border-radius: none;
+    }
+    .userPageInput {
+
+    }
+input[type="text"]:focus {
+  outline: none;
+}
+    </style>
 
     <form action='request.htm'>
-      Facebook Like Page:<br>
-      <input id='userPageInput' type='text' name='likePage' method='POST'>
+      <h2>Enter Search Criteria</h2><br>
+      <input class='userPageInput' id='userPageInput' type='text' name='likePage' method='POST' placeholder='Facebook Page'>
       <input id='userDateInput' type='date' name='sinceDate' method='POST'>
       <input type='submit' method='POST'>
       <br>
@@ -29,6 +56,6 @@
     <!-- <script src="/src/app.js"></script>
     <a href='#' onclick='downloadCSV({ filename: "stock-data.csv" });'>Download CSV</a> -->
 
-    <h1>Facebook Post Likes</h1>
+    <h1></h1>
   </body>
 </html>

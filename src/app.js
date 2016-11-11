@@ -26,13 +26,38 @@ $(document).ready(function() {
   getPostLikes = function(response) {
     $.get("https://graph.facebook.com/v2.8/" + likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey,function (facebookData) {
         // while (data.posts.paging.next !== 'undefined') {
+        var likePageId = facebookData.id;
         var postArray = [];
+        var testArray = [];
         var nextPage = facebookData.posts.paging.next;
         console.log(facebookData.posts.data[0]);
         // console.log(facebookData.posts.paging.include(next))
         var check = 0;
 
         postArray.push(facebookData.posts.data);
+
+        var currentDataLength = " "
+        var i = 1
+        if ('paging' in facebookData.posts) {
+          console.log("new page");
+          do {
+            $.get(nextPage, function(nextPageData) {
+              i ++;
+              console.log(i);
+              console.log(nextPageData);
+              testArray.push(nextPageData.data);
+              if ('paging' in nextPageData) {
+                var nextPage = nextPageData.paging.next;
+              }
+              currentDataLength = nextPageData.data.length;
+              console.log(nextPageData.data);
+            });
+          // } while (currentDataLength != 0);
+            } while (testArray.indexOf(likePageId) != -1)
+            console.log(testArray)
+            postArray.push(testArray);
+        }
+
 
         // test = function (url) {
         //   var nextUrl = ""
@@ -44,18 +69,18 @@ $(document).ready(function() {
         //   return nextUrl
         // }
         // test();
-        var currentDataLength = "cat"
-        do {
-          $.get(nextPage, function(nextPageData) {
-            postArray.push(nextPageData.data);
-            console.log(nextPageData.data)
-            var nextPage = nextPageData.paging.next;
-            // console.log(nextPageData.data[0]);
-            // console.log(facebookData.posts.data.length);
-            currentDataLength = nextPageData.data.length;
-            console.log(nextPageData.data)
-          });
-        } while (currentDataLength == 0); //FIX THIS WHILE LOOOOOOOOOOOOPP CONDITION!!!!!!!!!!!
+        // var currentDataLength = "cat"
+        // do {
+        //   $.get(nextPage, function(nextPageData) {
+        //     postArray.push(nextPageData.data);
+        //     console.log(nextPageData.data)
+        //     var nextPage = nextPageData.paging.next;
+        //     // console.log(nextPageData.data[0]);
+        //     // console.log(facebookData.posts.data.length);
+        //     currentDataLength = nextPageData.data.length;
+        //     console.log(nextPageData.data)
+        //   });
+        // } while (currentDataLength == 0); //FIX THIS WHILE LOOOOOOOOOOOOPP CONDITION!!!!!!!!!!!
 
         // ----------!
         // getNextPagePostLikes = function (response) {

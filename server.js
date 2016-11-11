@@ -20,6 +20,10 @@ app.get('/src/app.js', function(req, res) {
   res.sendFile(__dirname + "/" + "/src/app.js");
 })
 
+// app.use('/style.css', function(req, res) {
+//   res.sendFile(__dirname + "/" + "/style.css");
+// })
+
 app.post('/index.htm', urlencodedParser, function (req, res) {
    // Prepare output in JSON format
    response = {
