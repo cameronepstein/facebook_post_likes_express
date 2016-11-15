@@ -22,6 +22,11 @@
     "cookie-parser": "^1.4.3",
     "express": "^4.14.0",
     "multer": "^1.2.0",
-    "uniq": "^1.0.1"
+    "uniq": "^1.0.1",
+    "webpack": "^1.13.3"
+  },
+  "devDependencies": {
+    "eslint": "^3.10.1",
+    "eslint-config-google": "^0.7.0"
   }
 }

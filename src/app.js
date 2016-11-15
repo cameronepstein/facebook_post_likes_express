@@ -1,9 +1,14 @@
 var facebookKey = config.FACEBOOK_KEY;
 
+// var fs = require('fs');
+// var path = require('path')
+
+// IMPORT MODULES
+
 // ASSIGN QUERY TO VARIABLE
 
-var likePage = getQueryVariable("likePage");
-var sinceDate = getQueryVariable("sinceDate");
+var likePage = getQueryVariable('likePage');
+var sinceDate = getQueryVariable('sinceDate');
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -14,57 +19,121 @@ function getQueryVariable(variable) {
       return pair[1];
     }
   }
-  alert("Query Variable " + variable + " not found");
+  alert('Query Variable ' + variable + ' not found');
 }
 
-console.log("Page Search: " + likePage);
-console.log("Since: " + sinceDate)
+console.log('Page Search: ' + likePage);
+console.log('Since: ' + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
 $(document).ready(function() {
   getPostLikes = function(response) {
-    $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
+    $.get('https://graph.facebook.com/v2.8/'+ likePage + '?fields=access_token,posts.since(' + sinceDate + '){likes{id}}&access_token=' + facebookKey, function (facebookData) {
 
         var likePageId = facebookData.id;
         var postArray = [];
         var testArray = [];
-        var nextPage = facebookData.posts.paging.next;
         var check = 0;
 
-        postArray.push(facebookData.posts.data);
+        var currentDataLength = ' ';
+        var i = 0;
 
-        var currentDataLength = " "
-        var i = 0
-        if ('paging' in facebookData.posts) {
-          console.log("new page available");
-          do {
-            $.ajax({
-              async: false,
-              type: "GET",
-              url: nextPage,
-              success: function(nextPageData) {
-                console.log("New Page Accessed: " + nextPage)
-                i++;
-                console.log("Page Number: " + i)
-                testArray.push(nextPageData.data);
-                if ('paging' in nextPageData) {
-                  nextPage = nextPageData.paging.next;
-                  console.log("next page assigned");
-                }
-                currentDataLength = nextPageData.data.length;
-                console.log(currentDataLength);
-              }
-            });
-            console.log("DATA LENGTH: " + currentDataLength);
-          } while (currentDataLength > 0);
-          testArray.forEach(function(element) {
-            postArray.push(element);
-          });
-        }
+          // if (facebookData.hasOwnProperty('posts')) {
+          //   postArray.push(facebookData.posts.data);
+          //   var postData = facebookData.posts.data;
+          //   postData.forEach(function(item) {
+          //     console.log(item.likes)
+          //     if ('paging' in item.likes) {
+          //       // var nexLikePage = item.likes.paging.next;
+          //       do {
+          //         $.ajax({
+          //           async: false,
+          //           type: "GET",
+          //           url: item.likes.paging.next,
+          //           success: function(nextLikePageData) {
+          //             if ('paging' in nextLikePageData) {
+          //               nextLikePage = nextLikePageData.paging.next;
+          //             }
+          //             currentDataLength = nextLikePageData.data.length;
+          //             console.log(currentDataLength);
+          //           }
+          //         });
+          //       } while (currentDataLength > 0);
+          //       testArray.forEach(function(element) {
+          //         postArray.push(element);
+          //       })
+          //     }
+          //   });
+          // }
+
+          function paginateThrough(type) {
+            if ('paging' in type) {
+              var nextPage = type.paging.next;
+              console.log('new page available');
+              do {
+                $.ajax({
+                  async: false,
+                  type: 'GET',
+                  url: nextPage,
+                  success: function(nextPageData) {
+                    console.log('New Page Accessed: ' + nextPage)
+                    i++;
+                    console.log('Page Number: ' + i)
+                    testArray.push(nextPageData.data);
+                    if ('paging' in nextPageData) {
+                      nextPage = nextPageData.paging.next;
+                      console.log('next page assigned');
+                    }
+                    currentDataLength = nextPageData.data.length;
+                    console.log(currentDataLength);
+                  }
+                });
+                console.log('DATA LENGTH: ' + currentDataLength);
+              } while (currentDataLength > 0);
+              testArray.forEach(function(element) {
+                postArray.push(element);
+              });
+            } else {
+              console.log('ERROR: No Data Since: ' + sinceDate);
+            }
+          }
+
+          paginateThrough(facebookData.posts);
+
+        //   if ('paging' in facebookData.posts) {
+        //     var nextPage = facebookData.posts.paging.next;
+        //     console.log('new page available');
+        //     do {
+        //       $.ajax({
+        //         async: false,
+        //         type: 'GET',
+        //         url: nextPage,
+        //         success: function(nextPageData) {
+        //           console.log('New Page Accessed: ' + nextPage)
+        //           i++;
+        //           console.log('Page Number: ' + i)
+        //           testArray.push(nextPageData.data);
+        //           if ('paging' in nextPageData) {
+        //             nextPage = nextPageData.paging.next;
+        //             console.log('next page assigned');
+        //           }
+        //           currentDataLength = nextPageData.data.length;
+        //           console.log(currentDataLength);
+        //         }
+        //       });
+        //       console.log('DATA LENGTH: ' + currentDataLength);
+        //     } while (currentDataLength > 0);
+        //     testArray.forEach(function(element) {
+        //       postArray.push(element);
+        //     });
+        //   } else {
+        //   console.log('ERROR: No Facebook Posts Since: ' + sinceDate);
+        // }
+
 
       // AUTO DOWNLOAD CSV FILE
-        
+
       function downloadCSV(args) {
         var data, filename, link;
         var csv = convertArrayOfObjectsToCSV(postArray);
@@ -87,7 +156,7 @@ $(document).ready(function() {
       downloadCSV(convertedPostCSV);
     });
   };
-  console.log("Downloading...")
+  console.log('Downloading...')
   getPostLikes();
 
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
@@ -106,7 +175,7 @@ $(document).ready(function() {
     keys = Object.keys(data[0]);
 
     result = '';
-    result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
+    result += 'user_id' + columnDelimiter + ' post_id' + columnDelimiter + ' page_id';
     result += lineDelimiter;
 
     data.forEach(function(item) {
