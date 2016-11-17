@@ -4,6 +4,7 @@ var facebookKey = config.FACEBOOK_KEY;
 
 var likePage = getQueryVariable("likePage");
 var sinceDate = getQueryVariable("sinceDate");
+var likeArray = [];
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -63,8 +64,49 @@ $(document).ready(function() {
           });
         }
 
+
+      function pageThroughLikes(facebookPostArray) {
+        facebookPostArray.forEach(function(element) {
+          element.forEach(function(innerElement) {
+            temporaryLikeArray = [];
+            temporaryLikeArray.push(innerElement);
+            temporaryLikeArray.forEach(function(post) {
+              if ('likes' in post) {
+                if ('paging' in post.likes) {
+                  if ('next' in post.likes.paging) {
+                    nextPage = post.likes.paging.next
+                    i = 0;
+                    currentPostID = post.id;
+                    do {
+                      $.get({
+                        url: nextPage,
+                        success: function(nextPageLikeData) {
+                          nextPageLikeData.id = currentPostID;
+                          // nextPageLikeData.likes = nextPageLikeData.data;
+                          temporaryLikeArray.push(nextPageLikeData);
+                          i += 1;
+                          console.log(i)
+                          if ('paging' in nextPageLikeData) {
+                            if ('next' in nextPageLikeData.paging) {
+                              nextPage = nextPageLikeData.paging.next
+                            }
+                          }
+                          currentDataLength = nextPageLikeData.data.length
+                        }
+                      })
+                    } while ( currentDataLength != 0 && i > 10 )
+                    console.log(temporaryLikeArray)
+                  } likeArray.push(temporaryLikeArray);
+                }
+              }
+            })
+          });
+        })
+      }
+
+      pageThroughLikes(postArray);
       // AUTO DOWNLOAD CSV FILE
-        
+
       function downloadCSV(args) {
         var data, filename, link;
         var csv = convertArrayOfObjectsToCSV(postArray);
@@ -83,7 +125,7 @@ $(document).ready(function() {
         link.setAttribute('download', filename);
         link.click();
       }
-      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
+      var convertedPostCSV = convertArrayOfObjectsToCSV(likeArray);
       downloadCSV(convertedPostCSV);
     });
   };
