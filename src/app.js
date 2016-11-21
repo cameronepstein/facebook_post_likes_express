@@ -30,81 +30,88 @@ $(document).ready(function() {
         var likePageId = facebookData.id;
         var postArray = [];
         var testArray = [];
-        var nextPage = facebookData.posts.paging.next;
-        var check = 0;
+        if ('posts' in facebookData) {
+          var nextPage = facebookData.posts.paging.next;
+          var check = 0;
 
-        postArray.push(facebookData.posts.data);
+          postArray.push(facebookData.posts.data);
 
-        var currentDataLength = " "
-        var i = 0
-        if ('paging' in facebookData.posts) {
-          console.log("new page available");
-          do {
-            $.ajax({
-              async: false,
-              type: "GET",
-              url: nextPage,
-              success: function(nextPageData) {
-                console.log("New Page Accessed: " + nextPage)
-                i++;
-                console.log("Page Number: " + i)
-                testArray.push(nextPageData.data);
-                if ('paging' in nextPageData) {
-                  nextPage = nextPageData.paging.next;
-                  console.log("next page assigned");
+          var currentDataLength = " "
+          var i = 0
+          if ('paging' in facebookData.posts) {
+            console.log("new page available");
+            do {
+              $.ajax({
+                async: false,
+                type: "GET",
+                url: nextPage,
+                success: function(nextPageData) {
+                  console.log("New Page Accessed: " + nextPage)
+                  i++;
+                  console.log("Page Number: " + i)
+                  testArray.push(nextPageData.data);
+                  if ('paging' in nextPageData) {
+                    nextPage = nextPageData.paging.next;
+                    console.log("next page assigned");
+                  }
+                  currentDataLength = nextPageData.data.length;
+                  console.log(currentDataLength);
                 }
-                currentDataLength = nextPageData.data.length;
-                console.log(currentDataLength);
-              }
+              });
+              console.log("DATA LENGTH: " + currentDataLength);
+            } while (currentDataLength > 0);
+            testArray.forEach(function(element) {
+              postArray.push(element);
             });
-            console.log("DATA LENGTH: " + currentDataLength);
-          } while (currentDataLength > 0);
-          testArray.forEach(function(element) {
-            postArray.push(element);
-          });
+          }
+        } else {
+          console.log('Error: No facebook posts since this date!')
         }
 
 
-      function pageThroughLikes(facebookPostArray) {
-        facebookPostArray.forEach(function(element) {
-          element.forEach(function(innerElement) {
-            temporaryLikeArray = [];
-            temporaryLikeArray.push(innerElement);
-            temporaryLikeArray.forEach(function(post) {
-              if ('likes' in post) {
-                if ('paging' in post.likes) {
-                  if ('next' in post.likes.paging) {
-                    nextPage = post.likes.paging.next
-                    i = 0;
-                    currentPostID = post.id;
-                    do {
-                      $.get({
-                        url: nextPage,
-                        success: function(nextPageLikeData) {
-                          nextPageLikeData.id = currentPostID;
-                          // nextPageLikeData.likes = nextPageLikeData.data;
-                          temporaryLikeArray.push(nextPageLikeData);
-                          i += 1;
-                          console.log(i)
-                          if ('paging' in nextPageLikeData) {
-                            if ('next' in nextPageLikeData.paging) {
-                              nextPage = nextPageLikeData.paging.next
-                            }
-                          }
-                          currentDataLength = nextPageLikeData.data.length
-                        }
-                      })
-                    } while ( currentDataLength != 0 && i > 10 )
-                    console.log(temporaryLikeArray)
-                  } likeArray.push(temporaryLikeArray);
-                }
-              }
-            })
-          });
-        })
-      }
 
-      pageThroughLikes(postArray);
+      // function pageThroughLikes(facebookPostArray) {
+      //   facebookPostArray.forEach(function(element) {
+      //     element.forEach(function(innerElement) {
+      //       temporaryLikeArray = [];
+      //       temporaryLikeArray.push(innerElement);
+      //       temporaryLikeArray.forEach(function(post) {
+      //         if ('likes' in post) {
+      //           if ('paging' in post.likes) {
+      //             if ('next' in post.likes.paging) {
+      //               nextPage = post.likes.paging.next
+      //               i = 0;
+      //               currentPostID = post.id;
+      //               do {
+      //                 $.get({
+      //                   url: nextPage,
+      //                   success: function(nextPageLikeData) {
+      //
+      //                     nextPageLikeData.id = currentPostID;
+      //                     nextPageLikeData.likes = {}
+      //                     nextPageLikeData.likes.data = nextPageLikeData.data;
+      //                     temporaryLikeArray.push(nextPageLikeData);
+      //                     i += 1;
+      //                     console.log(i)
+      //                     if ('paging' in nextPageLikeData) {
+      //                       if ('next' in nextPageLikeData.paging) {
+      //                         nextPage = nextPageLikeData.paging.next
+      //                       }
+      //                     }
+      //                     currentDataLength = nextPageLikeData.data.length
+      //                   }
+      //                 })
+      //               } while ( currentDataLength != 0 && i > 10 )
+      //               console.log(temporaryLikeArray)
+      //             } likeArray.push(temporaryLikeArray);
+      //           }
+      //         }
+      //       })
+      //     });
+      //   })
+      // }
+
+      // pageThroughLikes(postArray);
       // AUTO DOWNLOAD CSV FILE
 
       function downloadCSV(args) {
@@ -125,7 +132,9 @@ $(document).ready(function() {
         link.setAttribute('download', filename);
         link.click();
       }
-      var convertedPostCSV = convertArrayOfObjectsToCSV(likeArray);
+
+      console.log(postArray)
+      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
       downloadCSV(convertedPostCSV);
     });
   };
