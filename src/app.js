@@ -25,12 +25,15 @@ console.log("Since: " + sinceDate)
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
 $(document).ready(function() {
-  getPostLikes();
+  getPostLikes().then(function() {
+    pageThroughLikes();
+  });
 });
 
 
-getPostLikes = function(response) {
-  $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
+getPostLikes = function(response, callback) {
+  return new Promise(function (fulfill, reject) {
+    $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
       var likePageId = facebookData.id;
       var testArray = [];
@@ -66,19 +69,24 @@ getPostLikes = function(response) {
           } while (currentDataLength > 0);
           testArray.forEach(function(element) {
             postArray.push(element);
+            fulfill();
           });
         }
       } else {
         console.log('Error: No facebook posts since this date!')
+        reject();
       }
       console.log(postArray)
       var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
       downloadCSV(convertedPostCSV);
     });
-  };
-  console.log("Downloading...")
+  })
+};
+console.log("Downloading...")
 
-
+function pageThroughLikes() {
+  console.log('PageThroughLikes');
+}
 
       // function pageThroughLikes(facebookPostArray) {
       //   facebookPostArray.forEach(function(element) {
