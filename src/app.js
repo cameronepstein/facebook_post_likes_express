@@ -27,18 +27,37 @@ console.log("Since: " + sinceDate)
 
 $(document).ready(function() {
   getPostLikes().then(function() {
-    pageThroughLikes(postArray).then(function() {
-      test();
-    });
-  });
+  console.log(postArray.length);
+  var list = pageThroughLikes(postArray);
+  console.log(list)
+  $.when.apply(this, list).done(function() {
+    var testArray = [];
+    if(list.length > 1) {
+    $.each(arguments, function(k, v) {
+    	var dt = processData(v[0]);
+    	testArray.push(dt);
+    	postArray.push(testArray);
+    })
+    } else {
+  console.log(arguments)
+   	console.log(arguments[0])
+    var dt = processData(arguments[0]);
+    testArray.push(dt);
+    postArray.push(testArray);
+    console.log(postArray)
+    console.log(testArray)
+    }
+    test(postArray);
+   });
+ });
 });
 
-function test() {
+function test(postArray) {
   var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
   downloadCSV(convertedPostCSV);
 }
 
-getPostLikes = function(response, callback) {
+function getPostLikes(response) {
   return new Promise(function (fulfill, reject) {
     $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
@@ -90,13 +109,12 @@ getPostLikes = function(response, callback) {
 };
 console.log("Downloading...")
 
-
 function pageThroughLikes(facebookPostArray) {
  console.log('paging through likes')
  var testArray = []
- return new Promise(function (fulfill, reject) {
+ var promiseList = [];
+ // return new Promise(function (fulfill, reject) {
    facebookPostArray.forEach(function(array) {
-     return new Promise(function (fulfill, reject) {
        array.forEach(function(innerObject) {
          if ('likes' in innerObject) {
            if ('paging' in innerObject.likes) {
@@ -105,79 +123,35 @@ function pageThroughLikes(facebookPostArray) {
                currentPostId = innerObject.id;
                currentDataLength = innerObject.likes.data.length;
                i = 0;
-               do{
-                 $.get(nextPage, function(nextLikePageData) {
-                   likeData = {};
-                   likeData.id = currentPostId;
-                   likeData.likes = {};
-                   likeData.likes.data = nextLikePageData.data
-                   likeData.likes.paging = nextLikePageData.paging
-                   console.log(likeData)
-                   testArray.push(likeData);
-                   facebookPostArray.push(testArray);
-                   console.log('pushed to test array')
-                 })
-                 i += 1;
-               } while (currentDataLength != 0 && i > 10)
+                 do{
+                   promiseList.push(
+                     $.ajax({url : nextPage
+                       }).then(function(data, b, promise){
+                       data.id = currentPostId;
+                       return promise;
+                       }))
+                       i += 1;
+                     } while (currentDataLength != 0 && i > 10)
+              }
              }
            }
-         }
-       })
-       fulfill();
-     })
+         })
    });
-   fulfill();
    console.log('paged through likes')
-  //  var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
-  //  downloadCSV(convertedPostCSV);
- })
+   return promiseList;
 }
 
-      // function pageThroughLikes(facebookPostArray) {
-      //   facebookPostArray.forEach(function(element) {
-      //     element.forEach(function(innerElement) {
-      //       temporaryLikeArray = [];
-      //       temporaryLikeArray.push(innerElement);
-      //       temporaryLikeArray.forEach(function(post) {
-      //         if ('likes' in post) {
-      //           if ('paging' in post.likes) {
-      //             if ('next' in post.likes.paging) {
-      //               nextPage = post.likes.paging.next
-      //               i = 0;
-      //               currentPostID = post.id;
-      //               do {
-      //                 $.get({
-      //                   url: nextPage,
-      //                   success: function(nextPageLikeData) {
-      //
-      //                     nextPageLikeData.id = currentPostID;
-      //                     nextPageLikeData.likes = {}
-      //                     nextPageLikeData.likes.data = nextPageLikeData.data;
-      //                     temporaryLikeArray.push(nextPageLikeData);
-      //                     i += 1;
-      //                     console.log(i)
-      //                     if ('paging' in nextPageLikeData) {
-      //                       if ('next' in nextPageLikeData.paging) {
-      //                         nextPage = nextPageLikeData.paging.next
-      //                       }
-      //                     }
-      //                     currentDataLength = nextPageLikeData.data.length
-      //                   }
-      //                 })
-      //               } while ( currentDataLength != 0 && i > 10 )
-      //               console.log(temporaryLikeArray)
-      //             } likeArray.push(temporaryLikeArray);
-      //           }
-      //         }
-      //       })
-      //     });
-      //   })
-      // }
-
-      // pageThroughLikes(postArray);
-
-
-  // getPostLikes();
+ processData = function(nextLikePageData){
+ console.log("processing data");
+ console.log(nextLikePageData)
+    likeData = {};
+                  likeData.id = nextLikePageData.id;
+                  likeData.likes = {};
+                  likeData.likes.data = nextLikePageData.data
+                  likeData.likes.paging = nextLikePageData.paging
+                  console.log(likeData);
+  return likeData;
+}
 
   // AUTO DOWNLOAD CSV FILE
 
@@ -203,6 +177,8 @@ function pageThroughLikes(facebookPostArray) {
 
   function convertArrayOfObjectsToCSV(args) {
     var result, ctr, keys, columnDelimiter, lineDelimiter, data;
+
+    console.log(args)
 
     data = args || null;
     if (data == null || !data.length) {
@@ -230,5 +206,6 @@ function pageThroughLikes(facebookPostArray) {
         };
       });
     });
+    console.log('converted to CSV')
   return result;
   }
