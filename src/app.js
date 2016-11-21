@@ -25,53 +25,20 @@ console.log("Since: " + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
-// $(document).ready(function() {
-//   getPostLikes().then(function() {
-//     pageThroughLikes(postArray).then(function() {
-//       test();
-//     });
-//   });
-// });
-
-// $(document).ready(function() {
-//   getPostLikes().then(function() {
-//     $.when.apply(pageThroughLikes(postArray), this).done(function() {
-//         //use arguments to resolve the data here
-//     var testArray = []
-//     $.each(arguments, function(k, v){
-//         var dt = processData(v[0]);
-//         testArray.push(dt);
-//         facebookPostArray.push(dt);
-//     });
-//         console.log(processedData)
-//       test();
-//     });
-//   });
-// });
-
 $(document).ready(function() {
   getPostLikes().then(function() {
-  $.when.apply(pageThroughLikes(postArray), this).done(function() {
-    //debug to examine the arguments object, you'll notice its an array of arrays
-    var testArray = []
-    $.each(arguments, function(k, v){
-        var dt = processData(v[0]);
-        testArray.push(dt);
-        facebookPostArray.push(dt);
+    pageThroughLikes(postArray).then(function() {
+      test();
     });
-    console.log(testArray)
-    test(testArray); // OR
-    test(facebookPostArray);
-   });
- });
+  });
 });
 
-function test(postArray) {
+function test() {
   var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
   downloadCSV(convertedPostCSV);
 }
 
-function getPostLikes(response) {
+getPostLikes = function(response, callback) {
   return new Promise(function (fulfill, reject) {
     $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
@@ -127,9 +94,9 @@ console.log("Downloading...")
 function pageThroughLikes(facebookPostArray) {
  console.log('paging through likes')
  var testArray = []
- var promiseList = [];
- // return new Promise(function (fulfill, reject) {
+ return new Promise(function (fulfill, reject) {
    facebookPostArray.forEach(function(array) {
+     return new Promise(function (fulfill, reject) {
        array.forEach(function(innerObject) {
          if ('likes' in innerObject) {
            if ('paging' in innerObject.likes) {
@@ -138,48 +105,32 @@ function pageThroughLikes(facebookPostArray) {
                currentPostId = innerObject.id;
                currentDataLength = innerObject.likes.data.length;
                i = 0;
-                 do{
-                   promiseList.push(
-                     $.ajax({url : nextPage
-                       }))
-                       i += 1;
-                     } while (currentDataLength != 0 && i > 10)
-                //    $.get(nextPage, function(nextLikePageData) {
-                //      likeData = {};
-                //      likeData.id = currentPostId;
-                //      likeData.likes = {};
-                //      likeData.likes.data = nextLikePageData.data
-                //      likeData.likes.paging = nextLikePageData.paging
-                //      console.log(likeData)
-                //      testArray.push(likeData);
-                //      facebookPostArray.push(testArray);
-                //      console.log('pushed to postArray')
-                //    })
-                //    i += 1;
-                //  } while (currentDataLength != 0 && i > 10)
-              }
+               do{
+                 $.get(nextPage, function(nextLikePageData) {
+                   likeData = {};
+                   likeData.id = currentPostId;
+                   likeData.likes = {};
+                   likeData.likes.data = nextLikePageData.data
+                   likeData.likes.paging = nextLikePageData.paging
+                   console.log(likeData)
+                   testArray.push(likeData);
+                   facebookPostArray.push(testArray);
+                   console.log('pushed to test array')
+                 })
+                 i += 1;
+               } while (currentDataLength != 0 && i > 10)
              }
            }
-         })
-    //    fulfill();
+         }
+       })
+       fulfill();
+     })
    });
+   fulfill();
    console.log('paged through likes')
-   return promiseList;
   //  var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
   //  downloadCSV(convertedPostCSV);
-}
-
- processData = function(nextLikePageData){
-    likeData = {};
-                  likeData.id = currentPostId;
-                  likeData.likes = {};
-                  likeData.likes.data = nextLikePageData.data
-                  likeData.likes.paging = nextLikePageData.paging
-                  console.log(likeData)
-                  testArray.push(likeData);
-                  facebookPostArray.push(testArray);
-                  console.log('pushed to postArray')
-  return likeData;
+ })
 }
 
       // function pageThroughLikes(facebookPostArray) {
@@ -279,6 +230,5 @@ function pageThroughLikes(facebookPostArray) {
         };
       });
     });
-    console.log('converted to CSV')
   return result;
   }
