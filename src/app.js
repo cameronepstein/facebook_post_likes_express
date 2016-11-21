@@ -5,6 +5,7 @@ var facebookKey = config.FACEBOOK_KEY;
 var likePage = getQueryVariable("likePage");
 var sinceDate = getQueryVariable("sinceDate");
 var likeArray = [];
+var postArray = [];
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -32,7 +33,6 @@ getPostLikes = function(response) {
   $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
       var likePageId = facebookData.id;
-      var postArray = [];
       var testArray = [];
       if ('posts' in facebookData) {
         var nextPage = facebookData.posts.paging.next;
@@ -71,6 +71,12 @@ getPostLikes = function(response) {
       } else {
         console.log('Error: No facebook posts since this date!')
       }
+      console.log(postArray)
+      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
+      downloadCSV(convertedPostCSV);
+    });
+  };
+  console.log("Downloading...")
 
 
 
@@ -117,35 +123,29 @@ getPostLikes = function(response) {
 
       // pageThroughLikes(postArray);
 
-      // AUTO DOWNLOAD CSV FILE
 
-      function downloadCSV(args) {
-        var data, filename, link;
-        var csv = convertArrayOfObjectsToCSV(postArray);
-
-        if (csv == null) return;
-
-        filename = args.filename || 'export.csv';
-
-        if (!csv.match(/^data:text\/csv/i)) {
-          csv = 'data:text/csv;charset=utf-8,' + csv;
-        }
-        data = encodeURI(csv);
-
-        link = document.createElement('a');
-        link.setAttribute('href', data);
-        link.setAttribute('download', filename);
-        link.click();
-      }
-
-      console.log(postArray)
-      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
-      downloadCSV(convertedPostCSV);
-    });
-  };
-  console.log("Downloading...")
   // getPostLikes();
 
+  // AUTO DOWNLOAD CSV FILE
+
+  function downloadCSV(args) {
+    var data, filename, link;
+    var csv = convertArrayOfObjectsToCSV(postArray);
+
+    if (csv == null) return;
+
+    filename = args.filename || 'export.csv';
+
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = 'data:text/csv;charset=utf-8,' + csv;
+    }
+    data = encodeURI(csv);
+
+    link = document.createElement('a');
+    link.setAttribute('href', data);
+    link.setAttribute('download', filename);
+    link.click();
+  }
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
 
   function convertArrayOfObjectsToCSV(args) {
