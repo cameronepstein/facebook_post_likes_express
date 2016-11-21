@@ -7,6 +7,7 @@ var sinceDate = getQueryVariable("sinceDate");
 var likeArray = [];
 var postArray = [];
 
+
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
   var vars = query.split('&');
@@ -24,19 +25,58 @@ console.log("Since: " + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
+// $(document).ready(function() {
+//   getPostLikes().then(function() {
+//     pageThroughLikes(postArray).then(function() {
+//       test();
+//     });
+//   });
+// });
+
+// $(document).ready(function() {
+//   getPostLikes().then(function() {
+//     $.when.apply(pageThroughLikes(postArray), this).done(function() {
+//         //use arguments to resolve the data here
+//     var testArray = []
+//     $.each(arguments, function(k, v){
+//         var dt = processData(v[0]);
+//         testArray.push(dt);
+//         facebookPostArray.push(dt);
+//     });
+//         console.log(processedData)
+//       test();
+//     });
+//   });
+// });
+
 $(document).ready(function() {
   getPostLikes().then(function() {
-    pageThroughLikes();
-  });
+  $.when.apply(pageThroughLikes(postArray), this).done(function() {
+    //debug to examine the arguments object, you'll notice its an array of arrays
+    var testArray = []
+    $.each(arguments, function(k, v){
+        var dt = processData(v[0]);
+        testArray.push(dt);
+        facebookPostArray.push(dt);
+    });
+    console.log(testArray)
+    test(testArray); // OR
+    test(facebookPostArray);
+   });
+ });
 });
 
+function test(postArray) {
+  var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
+  downloadCSV(convertedPostCSV);
+}
 
-getPostLikes = function(response, callback) {
+function getPostLikes(response) {
   return new Promise(function (fulfill, reject) {
     $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
       var likePageId = facebookData.id;
-      var testArray = [];
+      var testPostArray = [];
       if ('posts' in facebookData) {
         var nextPage = facebookData.posts.paging.next;
         var check = 0;
@@ -56,7 +96,7 @@ getPostLikes = function(response, callback) {
                 console.log("New Page Accessed: " + nextPage)
                 i++;
                 console.log("Page Number: " + i)
-                testArray.push(nextPageData.data);
+                testPostArray.push(nextPageData.data);
                 if ('paging' in nextPageData) {
                   nextPage = nextPageData.paging.next;
                   console.log("next page assigned");
@@ -67,7 +107,8 @@ getPostLikes = function(response, callback) {
             });
             console.log("DATA LENGTH: " + currentDataLength);
           } while (currentDataLength > 0);
-          testArray.forEach(function(element) {
+          testPostArray.forEach(function(element) {
+            console.log(element)
             postArray.push(element);
             fulfill();
           });
@@ -77,15 +118,68 @@ getPostLikes = function(response, callback) {
         reject();
       }
       console.log(postArray)
-      var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
-      downloadCSV(convertedPostCSV);
     });
   })
 };
 console.log("Downloading...")
 
-function pageThroughLikes() {
-  console.log('PageThroughLikes');
+
+function pageThroughLikes(facebookPostArray) {
+ console.log('paging through likes')
+ var testArray = []
+ var promiseList = [];
+ // return new Promise(function (fulfill, reject) {
+   facebookPostArray.forEach(function(array) {
+       array.forEach(function(innerObject) {
+         if ('likes' in innerObject) {
+           if ('paging' in innerObject.likes) {
+             if ('next' in innerObject.likes.paging) {
+               nextPage = innerObject.likes.paging.next;
+               currentPostId = innerObject.id;
+               currentDataLength = innerObject.likes.data.length;
+               i = 0;
+                 do{
+                   promiseList.push(
+                     $.ajax({url : nextPage
+                       }))
+                       i += 1;
+                     } while (currentDataLength != 0 && i > 10)
+                //    $.get(nextPage, function(nextLikePageData) {
+                //      likeData = {};
+                //      likeData.id = currentPostId;
+                //      likeData.likes = {};
+                //      likeData.likes.data = nextLikePageData.data
+                //      likeData.likes.paging = nextLikePageData.paging
+                //      console.log(likeData)
+                //      testArray.push(likeData);
+                //      facebookPostArray.push(testArray);
+                //      console.log('pushed to postArray')
+                //    })
+                //    i += 1;
+                //  } while (currentDataLength != 0 && i > 10)
+              }
+             }
+           }
+         })
+    //    fulfill();
+   });
+   console.log('paged through likes')
+   return promiseList;
+  //  var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
+  //  downloadCSV(convertedPostCSV);
+}
+
+ processData = function(nextLikePageData){
+    likeData = {};
+                  likeData.id = currentPostId;
+                  likeData.likes = {};
+                  likeData.likes.data = nextLikePageData.data
+                  likeData.likes.paging = nextLikePageData.paging
+                  console.log(likeData)
+                  testArray.push(likeData);
+                  facebookPostArray.push(testArray);
+                  console.log('pushed to postArray')
+  return likeData;
 }
 
       // function pageThroughLikes(facebookPostArray) {
@@ -185,5 +279,6 @@ function pageThroughLikes() {
         };
       });
     });
+    console.log('converted to CSV')
   return result;
   }
