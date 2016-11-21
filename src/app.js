@@ -24,49 +24,53 @@ console.log("Since: " + sinceDate)
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
 $(document).ready(function() {
-  getPostLikes = function(response) {
-    $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
+  getPostLikes();
+});
 
-        var likePageId = facebookData.id;
-        var postArray = [];
-        var testArray = [];
-        if ('posts' in facebookData) {
-          var nextPage = facebookData.posts.paging.next;
-          var check = 0;
 
-          postArray.push(facebookData.posts.data);
+getPostLikes = function(response) {
+  $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
 
-          var currentDataLength = " "
-          var i = 0
-          if ('paging' in facebookData.posts) {
-            console.log("new page available");
-            do {
-              $.ajax({
-                async: false,
-                type: "GET",
-                url: nextPage,
-                success: function(nextPageData) {
-                  console.log("New Page Accessed: " + nextPage)
-                  i++;
-                  console.log("Page Number: " + i)
-                  testArray.push(nextPageData.data);
-                  if ('paging' in nextPageData) {
-                    nextPage = nextPageData.paging.next;
-                    console.log("next page assigned");
-                  }
-                  currentDataLength = nextPageData.data.length;
-                  console.log(currentDataLength);
+      var likePageId = facebookData.id;
+      var postArray = [];
+      var testArray = [];
+      if ('posts' in facebookData) {
+        var nextPage = facebookData.posts.paging.next;
+        var check = 0;
+
+        postArray.push(facebookData.posts.data);
+
+        var currentDataLength = " "
+        var i = 0
+        if ('paging' in facebookData.posts) {
+          console.log("new page available");
+          do {
+            $.ajax({
+              async: false,
+              type: "GET",
+              url: nextPage,
+              success: function(nextPageData) {
+                console.log("New Page Accessed: " + nextPage)
+                i++;
+                console.log("Page Number: " + i)
+                testArray.push(nextPageData.data);
+                if ('paging' in nextPageData) {
+                  nextPage = nextPageData.paging.next;
+                  console.log("next page assigned");
                 }
-              });
-              console.log("DATA LENGTH: " + currentDataLength);
-            } while (currentDataLength > 0);
-            testArray.forEach(function(element) {
-              postArray.push(element);
+                currentDataLength = nextPageData.data.length;
+                console.log(currentDataLength);
+              }
             });
-          }
-        } else {
-          console.log('Error: No facebook posts since this date!')
+            console.log("DATA LENGTH: " + currentDataLength);
+          } while (currentDataLength > 0);
+          testArray.forEach(function(element) {
+            postArray.push(element);
+          });
         }
+      } else {
+        console.log('Error: No facebook posts since this date!')
+      }
 
 
 
@@ -112,7 +116,7 @@ $(document).ready(function() {
       // }
 
       // pageThroughLikes(postArray);
-      
+
       // AUTO DOWNLOAD CSV FILE
 
       function downloadCSV(args) {
@@ -140,7 +144,7 @@ $(document).ready(function() {
     });
   };
   console.log("Downloading...")
-  getPostLikes();
+  // getPostLikes();
 
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
 
@@ -175,4 +179,3 @@ $(document).ready(function() {
     });
   return result;
   }
-})
