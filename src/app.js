@@ -52,6 +52,7 @@ console.log("Since: " + sinceDate)
 
 $(document).ready(function() {
   getPostLikes().then(function() {
+    console.log(postArray);
   pageThroughLikes(postArray, test)
  });
 });
@@ -142,6 +143,7 @@ function pageThroughLikes(facebookPostArray, callback) {
 }
 
 function createLikeObject(likeData, postId, callback, args, fail) {
+  likeArrayFormat = [];
   likeObject = {};
   likeObject.likes = {};
   likeObject.id = postId;
@@ -149,7 +151,8 @@ function createLikeObject(likeData, postId, callback, args, fail) {
   likeData.data.forEach(function(like) {
     likeObject.likes.data.push(like);
   });
-  postArray.push(likeObject);
+  likeArrayFormat.push(likeObject);
+  postArray.push(likeArrayFormat);
   callback(args, fail)
 }
 
@@ -187,7 +190,7 @@ function checkForPagesOfLikes(data, noMorePages) {
 
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
 
-  function convertArrayOfObjectsToCSV(args) {
+  function convertArrayOfObjectsToCSV(args, callback) {
     var result, ctr, keys, columnDelimiter, lineDelimiter, data;
     // console.log(args)
     data = args || null;
@@ -200,18 +203,27 @@ function checkForPagesOfLikes(data, noMorePages) {
     result = '';
     result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
     result += lineDelimiter;
-    data.forEach(function(item) {
-      item.forEach(function(post) {
-        if ('likes' in post) {
-          var likeArray = post.likes
-          likeArray.data.forEach(function(like) {
-            result += like.id + columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
+    console.log(args)
+    args.forEach(function(object) {
+      console.log(object)
+      console.log(object.length)
+      if (object.length != 0) {
+        object.forEach(function(item) {
+          item.forEach(function(post) {
+            console.log(post)
+            if ('likes' in post) {
+              var likeArray = post.likes
+              likeArray.data.forEach(function(like) {
+                result += like.id + columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
+              });
+            } else {
+              result += columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
+            };
           });
-        } else {
-          result += columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
-        };
-      });
-    });
+        });
+      }
+    })
     console.log('converted to CSV')
   return result;
+  callback();
   }
