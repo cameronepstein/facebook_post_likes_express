@@ -1,12 +1,10 @@
 var facebookKey = config.FACEBOOK_KEY;
 
 // ASSIGN QUERY TO VARIABLE
-
 var likePage = getQueryVariable("likePage");
 var sinceDate = getQueryVariable("sinceDate");
 var likeArray = [];
 var postArray = [];
-
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -19,7 +17,6 @@ function getQueryVariable(variable) {
   }
   alert("Query Variable " + variable + " not found");
 }
-
 console.log("Page Search: " + likePage);
 console.log("Since: " + sinceDate)
 
@@ -27,20 +24,21 @@ console.log("Since: " + sinceDate)
 
 $(document).ready(function() {
   getPostLikes().then(function() {
-  console.log(postArray.length);
+  console.log(postArray);
   var list = pageThroughLikes(postArray);
   console.log(list)
   $.when.apply(this, list).done(function() {
     var testArray = [];
+    console.log(list.length)
     if(list.length > 1) {
     $.each(arguments, function(k, v) {
-    	var dt = processData(v[0]);
-    	testArray.push(dt);
-    	postArray.push(testArray);
+        var dt = processData(v[0]);
+        testArray.push(dt);
+        postArray.push(testArray);
     })
     } else {
   console.log(arguments)
-   	console.log(arguments[0])
+    console.log(arguments[0])
     var dt = processData(arguments[0]);
     testArray.push(dt);
     postArray.push(testArray);
@@ -60,15 +58,12 @@ function test(postArray) {
 function getPostLikes(response) {
   return new Promise(function (fulfill, reject) {
     $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
-
       var likePageId = facebookData.id;
       var testPostArray = [];
       if ('posts' in facebookData) {
         var nextPage = facebookData.posts.paging.next;
         var check = 0;
-
         postArray.push(facebookData.posts.data);
-
         var currentDataLength = " "
         var i = 0
         if ('paging' in facebookData.posts) {
@@ -119,19 +114,27 @@ function pageThroughLikes(facebookPostArray) {
          if ('likes' in innerObject) {
            if ('paging' in innerObject.likes) {
              if ('next' in innerObject.likes.paging) {
-               nextPage = innerObject.likes.paging.next;
-               currentPostId = innerObject.id;
-               currentDataLength = innerObject.likes.data.length;
-               i = 0;
-                 do{
+               var nextPage = innerObject.likes.paging.next;
+               var currentPostId = innerObject.id;
+               var currentDataLength = innerObject.likes.data.length;
+               var i = 0;
+                 do {
                    promiseList.push(
                      $.ajax({url : nextPage
                        }).then(function(data, b, promise){
+                         console.log(data)
                        data.id = currentPostId;
-                       return promise;
+                       if ('paging' in data) {
+                         if ('next' in data.paging) {
+                           nextPage = data.paging.next;
+                         }
+                       }
+                       var currentDataLength = data.data.length
+                      //  currentDataLength = data.length
+                       return promise
                        }))
                        i += 1;
-                     } while (currentDataLength != 0 && i > 10)
+                     } while (currentDataLength != 0 && i < 1)
               }
              }
            }
@@ -143,57 +146,47 @@ function pageThroughLikes(facebookPostArray) {
 
  processData = function(nextLikePageData){
  console.log("processing data");
- console.log(nextLikePageData)
+ // console.log(nextLikePageData)
     likeData = {};
                   likeData.id = nextLikePageData.id;
                   likeData.likes = {};
                   likeData.likes.data = nextLikePageData.data
                   likeData.likes.paging = nextLikePageData.paging
-                  console.log(likeData);
+                  // console.log(likeData);
   return likeData;
 }
 
   // AUTO DOWNLOAD CSV FILE
-
   function downloadCSV(args) {
     var data, filename, link;
     var csv = convertArrayOfObjectsToCSV(postArray);
-
     if (csv == null) return;
-
     filename = args.filename || 'export.csv';
-
     if (!csv.match(/^data:text\/csv/i)) {
       csv = 'data:text/csv;charset=utf-8,' + csv;
     }
     data = encodeURI(csv);
-
     link = document.createElement('a');
     link.setAttribute('href', data);
     link.setAttribute('download', filename);
     link.click();
   }
+
   // CONVERT FACEBOOK POSTS OBJECTS TO CSV FORMAT
 
   function convertArrayOfObjectsToCSV(args) {
     var result, ctr, keys, columnDelimiter, lineDelimiter, data;
-
-    console.log(args)
-
+    // console.log(args)
     data = args || null;
     if (data == null || !data.length) {
       return null;
     }
-
     columnDelimiter = args.columnDelimiter || ',';
     lineDelimiter = args.lineDelimiter || '\n';
-
     keys = Object.keys(data[0]);
-
     result = '';
     result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
     result += lineDelimiter;
-
     data.forEach(function(item) {
       item.forEach(function(post) {
         if ('likes' in post) {
