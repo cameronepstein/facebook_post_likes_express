@@ -105,6 +105,7 @@ function pageThroughLikes(facebookPostArray, callback) {
                nextPage = nextLikePageData.paging.next;
              }
              else {
+               console.log('no more pages of likes')
                callback();
              }
             }
@@ -154,8 +155,8 @@ function pushToArray(item, array, callback) {
 
 function checkForPagesOfLikes(data, noMorePages) {
   if ('paging' in data && 'next' in data.paging) {
-      return true;
-      console.log('NEW PAGE FOUND')
+    console.log('NEW PAGE FOUND')
+      noMorePages = false;
     }
   else {
     noMorePages = true;
