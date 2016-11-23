@@ -5,6 +5,7 @@ var likePage = getQueryVariable("likePage");
 var sinceDate = getQueryVariable("sinceDate");
 var likeArray = [];
 var postArray = [];
+var noMorePages = false;
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -88,38 +89,51 @@ function pageThroughLikes(facebookPostArray, callback) {
  console.log('paging through likes')
  var testArray = []
  var promiseList = [];
+ // var noMorePages = false;
    facebookPostArray.forEach(function(array) {
      array.forEach(function(innerObject) {
        if ('likes' in innerObject && 'paging' in innerObject.likes && 'next' in innerObject.likes.paging) {
        var nextPage = innerObject.likes.paging.next;
        console.log('new likes page assigned: ' + nextPage);
        var currentPostId = innerObject.id;
-       var noMorePages = false;
        var i = 0;
-       do{
+       console.log(postArray.length)
+
+       function doAjaxRequest() {
+         console.log(noMorePages)
+         if (noMorePages) {
+          //  if (postArray.length - 1 == facebookPostArray.length - 1 && arrayCount == array.count - 1) {
+                 // We've gone through all our posts and likes, lets trigger the callback
+                 console.log('calling back')
+                 callback();
+              // }
+              return;
+            }
+
          $.ajax({
            url: nextPage,
-           success: function(nextLikePageData) {
-             console.log(nextLikePageData)
-             console.log('Get request to new page of likes: Successful ' + nextPage)
-             createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
-             if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
-               nextPage = nextLikePageData.paging.next;
-               console.log('assigned next page of likes ' + nextPage )
+           success: function(nextPageLikeData) {
+             console.log(nextPageLikeData)
+             createLikeObject(nextPageLikeData, currentPostId, checkForPagesOfLikes, nextPageLikeData, noMorePages)
+           },
+           complete: function(nextPageLikeData) {
+             if ('paging' in nextPageLikeData && 'next' in nextPageLikeData.paging) {
+               nextPage = nextPageLikeData.paging.next;
+               console.log('assigned next page of likes!!!!!!!!!!!!!!!!!!!!!!!!!!!! ' + nextPage )
+               doAjaxRequest();
              }
              else {
-               console.log('no more pages of likes')
-               //callback()
+               noMorePages = true;
+               console.log('else run')
+               doAjaxRequest();
              }
-            }
-          })
-         i += 1
-         console.log(i)
-       } while (noMorePages == false && i < 2);
+           }
+         })
+        }
+        doAjaxRequest();
        }
      })
    });
-   callback();
 }
 
 // function requestNextPageAndSaveData(page, callback) {
@@ -156,13 +170,14 @@ function pushToArray(item, array, callback) {
   callback()
 }
 
-function checkForPagesOfLikes(data, noMorePages) {
+function checkForPagesOfLikes(data, noPages) {
   if ('paging' in data && 'next' in data.paging) {
     console.log('NEW PAGE OF LIKES FOUND')
-    noMorePages == false;
+    noPages = false;
   }
   else {
-    noMorePages == true;
+    noPages = true;
+    console.log(noPages)
     console.log('NO MORE PAGES OF LIKES FOR CURRENT OBJECT')
   }
 }
