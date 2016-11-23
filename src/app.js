@@ -97,33 +97,29 @@ function pageThroughLikes(facebookPostArray, callback) {
        var noMorePages = false;
        var i = 0;
        do{
-         console.log('making get request: ' + nextPage)
          $.ajax({
            url: nextPage,
            success: function(nextLikePageData) {
-             var newPageData = nextLikePageData;
              console.log(nextLikePageData)
              console.log('Get request to new page of likes: Successful ' + nextPage)
-             createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, nextPage, noMorePages)
-             console.log(noMorePages)
-
-            //  if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
-            //    nextPage = nextLikePageData.paging.next;
-            //    console.log('assigned next page of likes ' + nextPage )
-            //  }
-            //  else {
-            //    console.log('no more pages of likes')
-            //    callback();
-            //  }
+             createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
+             if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
+               nextPage = nextLikePageData.paging.next;
+               console.log('assigned next page of likes ' + nextPage )
+             }
+             else {
+               console.log('no more pages of likes')
+               //callback()
+             }
             }
           })
          i += 1
          console.log(i)
-       } while (noMorePages == false && i < 10);
-      }
+       } while (noMorePages == false && i < 2);
+       }
      })
    });
-  //  callback();
+   callback();
 }
 
 // function requestNextPageAndSaveData(page, callback) {
@@ -160,14 +156,13 @@ function pushToArray(item, array, callback) {
   callback()
 }
 
-function checkForPagesOfLikes(data, newPageAssign, noExtraPages) {
+function checkForPagesOfLikes(data, noMorePages) {
   if ('paging' in data && 'next' in data.paging) {
-    newPageAssign = data.paging.next
-    console.log('NEW PAGE OF LIKES FOUND ' + newPageAssign)
-    noExtraPages == false;
+    console.log('NEW PAGE OF LIKES FOUND')
+    noMorePages == false;
   }
   else {
-    noExtraPages == true;
+    noMorePages == true;
     console.log('NO MORE PAGES OF LIKES FOR CURRENT OBJECT')
   }
 }
