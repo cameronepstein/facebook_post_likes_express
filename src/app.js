@@ -25,7 +25,6 @@ console.log("Since: " + sinceDate)
 
 $(document).ready(function() {
   getPostLikes().then(function() {
-    // console.log(postArray);
   pageThroughLikes(postArray, test)
  });
 });
@@ -82,14 +81,13 @@ function getPostLikes(response) {
     });
   })
 };
-console.log("Downloading...")
 
 
 function pageThroughLikes(facebookPostArray, callback) {
  console.log('paging through likes')
  var testArray = []
  var promiseList = [];
- // var noMorePages = false;
+
    facebookPostArray.forEach(function(array) {
      array.forEach(function(innerObject) {
        if ('likes' in innerObject && 'paging' in innerObject.likes && 'next' in innerObject.likes.paging) {
@@ -103,7 +101,6 @@ function pageThroughLikes(facebookPostArray, callback) {
        function doAjaxRequest() {
          console.log(noMorePages)
          if (noMorePages) {
-                 console.log('calling back')
                  callback();
               return;
             }
@@ -111,21 +108,18 @@ function pageThroughLikes(facebookPostArray, callback) {
          $.ajax({
            url: nextPage,
            success: function(nextPageLikeData) {
-             console.log(nextPageLikeData)
              pageData = nextPageLikeData;
              createLikeObject(nextPageLikeData, currentPostId, checkForPagesOfLikes, nextPageLikeData, noMorePages)
            },
            complete: function() {
              console.log('checking for more pages')
-             console.log(pageData)
              if ('paging' in pageData && 'next' in pageData.paging) {
                nextPage = pageData.paging.next;
-               console.log('assigned next page of likes!!!!!!!!!!!!!!!!!!!!!!!!!!!! ' + nextPage )
+               console.log('assigned next page of likes: ' + nextPage )
                doAjaxRequest();
              }
              else {
                noMorePages = true;
-               console.log('else run')
                doAjaxRequest();
              }
            }
@@ -136,20 +130,6 @@ function pageThroughLikes(facebookPostArray, callback) {
      })
    });
 }
-
-// function requestNextPageAndSaveData(page, callback) {
-//   var nextPage = page
-//   $.ajax({
-//     url: nextPage,
-//     success: function(nextLikePageData) {
-//       createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
-//       if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
-//         nextPage = nextLikePageData.paging.next;
-//       }
-//      }
-//    })
-//    callback();
-// }
 
 function createLikeObject(likeData, postId, callback, args, fail) {
   likeArrayFormat = [];
@@ -185,6 +165,7 @@ function checkForPagesOfLikes(data, noPages) {
 
   // AUTO DOWNLOAD CSV FILE
   function downloadCSV(args) {
+    console.log('Downloading CSV')
     var data, filename, link;
     var csv = convertArrayOfObjectsToCSV(postArray);
     if (csv == null) return;
@@ -203,7 +184,7 @@ function checkForPagesOfLikes(data, noPages) {
 
   function convertArrayOfObjectsToCSV(args, callback) {
     var result, ctr, keys, columnDelimiter, lineDelimiter, data;
-    // console.log(args)
+
     data = args || null;
     if (data == null || !data.length) {
       return null;
@@ -214,19 +195,15 @@ function checkForPagesOfLikes(data, noPages) {
     result = '';
     result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
     result += lineDelimiter;
-    // console.log(args)
+
     args.forEach(function(object) {
-      // console.log(object)
-      // console.log(object.length)
       if (object.length != 0) {
         object.forEach(function(item) {
           if ('likes' in item && 'data' in item.likes) {
             var postId = item.id;
             item.likes.data.forEach(function(likeId) {
               if ('id' in likeId) {
-                // console.log(likeId)
                 var likeArray = likeId;
-                // console.log(likeArray)
                   result += likeArray.id + columnDelimiter + postId.split('_').reverse() + lineDelimiter;
               } else {
                 result += columnDelimiter + postId.split('_').reverse() + lineDelimiter;
