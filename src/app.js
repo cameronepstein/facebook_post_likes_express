@@ -22,37 +22,9 @@ console.log("Since: " + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
-// $(document).ready(function() {
-//   getPostLikes().then(function() {
-//   console.log(postArray);
-//   var list = pageThroughLikes(postArray);
-//   console.log(list)
-//   $.when.apply(this, list).done(function() {
-//     var testArray = [];
-//     console.log(list.length)
-//     if(list.length > 1) {
-//     $.each(arguments, function(k, v) {
-//         var dt = processData(v[0]);
-//         testArray.push(dt);
-//         postArray.push(testArray);
-//     })
-//     } else {
-//   console.log(arguments)
-//     console.log(arguments[0])
-//     var dt = processData(arguments[0]);
-//     testArray.push(dt);
-//     postArray.push(testArray);
-//     console.log(postArray)
-//     console.log(testArray)
-//     }
-//     test(postArray);
-//    });
-//  });
-// });
-
 $(document).ready(function() {
   getPostLikes().then(function() {
-    console.log(postArray);
+    // console.log(postArray);
   pageThroughLikes(postArray, test)
  });
 });
@@ -81,13 +53,13 @@ function getPostLikes(response) {
               type: "GET",
               url: nextPage,
               success: function(nextPageData) {
-                console.log("New Page Accessed: " + nextPage)
+                console.log("New Post Page Accessed: " + nextPage)
                 i++;
-                console.log("Page Number: " + i)
+                console.log("Paging Through Posts: " + i)
                 testPostArray.push(nextPageData.data);
                 if ('paging' in nextPageData) {
                   nextPage = nextPageData.paging.next;
-                  console.log("next page assigned");
+                  console.log("next page assigned: " + nextPage);
                 }
                 currentDataLength = nextPageData.data.length;
                 console.log(currentDataLength);
@@ -96,7 +68,7 @@ function getPostLikes(response) {
             console.log("DATA LENGTH: " + currentDataLength);
           } while (currentDataLength > 0);
           testPostArray.forEach(function(element) {
-            console.log(element)
+            // console.log(element)
             postArray.push(element);
             fulfill();
           });
@@ -105,7 +77,7 @@ function getPostLikes(response) {
         console.log('Error: No facebook posts since this date!')
         reject();
       }
-      console.log(postArray)
+      // console.log(postArray)
     });
   })
 };
@@ -120,6 +92,7 @@ function pageThroughLikes(facebookPostArray, callback) {
      array.forEach(function(innerObject) {
        if ('likes' in innerObject && 'paging' in innerObject.likes && 'next' in innerObject.likes.paging) {
        var nextPage = innerObject.likes.paging.next;
+       console.log('new likes page assigned: ' + nextPage);
        var currentPostId = innerObject.id;
        var noMorePages = false;
        var i = 0;
@@ -131,14 +104,31 @@ function pageThroughLikes(facebookPostArray, callback) {
              if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
                nextPage = nextLikePageData.paging.next;
              }
+             else {
+               callback();
+             }
             }
           })
          i += 1
+         console.log(i)
         } while (noMorePages = false);
        }
      })
    });
    console.log('paged through likes')
+}
+
+function requestNextPageAndSaveData(page, callback) {
+  var nextPage = page
+  $.ajax({
+    url: nextPage,
+    success: function(nextLikePageData) {
+      createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
+      if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
+        nextPage = nextLikePageData.paging.next;
+      }
+     }
+   })
    callback();
 }
 
@@ -153,6 +143,7 @@ function createLikeObject(likeData, postId, callback, args, fail) {
   });
   likeArrayFormat.push(likeObject);
   postArray.push(likeArrayFormat);
+  console.log('pushed new like data to postArray')
   callback(args, fail)
 }
 
@@ -203,23 +194,25 @@ function checkForPagesOfLikes(data, noMorePages) {
     result = '';
     result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
     result += lineDelimiter;
-    console.log(args)
+    // console.log(args)
     args.forEach(function(object) {
-      console.log(object)
-      console.log(object.length)
+      // console.log(object)
+      // console.log(object.length)
       if (object.length != 0) {
         object.forEach(function(item) {
-          item.forEach(function(post) {
-            console.log(post)
-            if ('likes' in post) {
-              var likeArray = post.likes
-              likeArray.data.forEach(function(like) {
-                result += like.id + columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
-              });
-            } else {
-              result += columnDelimiter + post.id.split('_').reverse() + lineDelimiter;
-            };
-          });
+          if ('likes' in item && 'data' in item.likes) {
+            var postId = item.id;
+            item.likes.data.forEach(function(likeId) {
+              if ('id' in likeId) {
+                // console.log(likeId)
+                var likeArray = likeId;
+                // console.log(likeArray)
+                  result += likeArray.id + columnDelimiter + postId.split('_').reverse() + lineDelimiter;
+              } else {
+                result += columnDelimiter + postId.split('_').reverse() + lineDelimiter;
+              };
+            });
+          }
         });
       }
     })
