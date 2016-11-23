@@ -98,15 +98,13 @@ function pageThroughLikes(facebookPostArray, callback) {
        var currentPostId = innerObject.id;
        var i = 0;
        console.log(postArray.length)
+       var pageData = '';
 
        function doAjaxRequest() {
          console.log(noMorePages)
          if (noMorePages) {
-          //  if (postArray.length - 1 == facebookPostArray.length - 1 && arrayCount == array.count - 1) {
-                 // We've gone through all our posts and likes, lets trigger the callback
                  console.log('calling back')
                  callback();
-              // }
               return;
             }
 
@@ -114,11 +112,14 @@ function pageThroughLikes(facebookPostArray, callback) {
            url: nextPage,
            success: function(nextPageLikeData) {
              console.log(nextPageLikeData)
+             pageData = nextPageLikeData;
              createLikeObject(nextPageLikeData, currentPostId, checkForPagesOfLikes, nextPageLikeData, noMorePages)
            },
-           complete: function(nextPageLikeData) {
-             if ('paging' in nextPageLikeData && 'next' in nextPageLikeData.paging) {
-               nextPage = nextPageLikeData.paging.next;
+           complete: function() {
+             console.log('checking for more pages')
+             console.log(pageData)
+             if ('paging' in pageData && 'next' in pageData.paging) {
+               nextPage = pageData.paging.next;
                console.log('assigned next page of likes!!!!!!!!!!!!!!!!!!!!!!!!!!!! ' + nextPage )
                doAjaxRequest();
              }
