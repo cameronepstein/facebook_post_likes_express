@@ -156,8 +156,8 @@ function pushToArray(item, array, callback) {
 function checkForPagesOfLikes(data, noMorePages) {
   if ('paging' in data && 'next' in data.paging) {
     console.log('NEW PAGE FOUND')
-      noMorePages = false;
-    }
+    noMorePages = false;
+  }
   else {
     noMorePages = true;
     console.log('NO MORE PAGES OF LIKES FOR CURRENT OBJECT')
