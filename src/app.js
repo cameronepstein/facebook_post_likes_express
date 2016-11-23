@@ -97,41 +97,48 @@ function pageThroughLikes(facebookPostArray, callback) {
        var noMorePages = false;
        var i = 0;
        do{
+         console.log('making get request: ' + nextPage)
          $.ajax({
            url: nextPage,
            success: function(nextLikePageData) {
-             createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
-             if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
-               nextPage = nextLikePageData.paging.next;
-             }
-             else {
-               console.log('no more pages of likes')
-               callback();
-             }
+             var newPageData = nextLikePageData;
+             console.log(nextLikePageData)
+             console.log('Get request to new page of likes: Successful ' + nextPage)
+             createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, nextPage, noMorePages)
+             console.log(noMorePages)
+
+            //  if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
+            //    nextPage = nextLikePageData.paging.next;
+            //    console.log('assigned next page of likes ' + nextPage )
+            //  }
+            //  else {
+            //    console.log('no more pages of likes')
+            //    callback();
+            //  }
             }
           })
          i += 1
          console.log(i)
-        } while (noMorePages = false);
-       }
+       } while (noMorePages == false && i < 10);
+      }
      })
    });
-   console.log('paged through likes')
+  //  callback();
 }
 
-function requestNextPageAndSaveData(page, callback) {
-  var nextPage = page
-  $.ajax({
-    url: nextPage,
-    success: function(nextLikePageData) {
-      createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
-      if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
-        nextPage = nextLikePageData.paging.next;
-      }
-     }
-   })
-   callback();
-}
+// function requestNextPageAndSaveData(page, callback) {
+//   var nextPage = page
+//   $.ajax({
+//     url: nextPage,
+//     success: function(nextLikePageData) {
+//       createLikeObject(nextLikePageData, currentPostId, checkForPagesOfLikes, nextLikePageData, noMorePages)
+//       if ('paging' in nextLikePageData && 'next' in nextLikePageData.paging) {
+//         nextPage = nextLikePageData.paging.next;
+//       }
+//      }
+//    })
+//    callback();
+// }
 
 function createLikeObject(likeData, postId, callback, args, fail) {
   likeArrayFormat = [];
@@ -153,13 +160,14 @@ function pushToArray(item, array, callback) {
   callback()
 }
 
-function checkForPagesOfLikes(data, noMorePages) {
+function checkForPagesOfLikes(data, newPageAssign, noExtraPages) {
   if ('paging' in data && 'next' in data.paging) {
-    console.log('NEW PAGE FOUND')
-    noMorePages = false;
+    newPageAssign = data.paging.next
+    console.log('NEW PAGE OF LIKES FOUND ' + newPageAssign)
+    noExtraPages == false;
   }
   else {
-    noMorePages = true;
+    noExtraPages == true;
     console.log('NO MORE PAGES OF LIKES FOR CURRENT OBJECT')
   }
 }
