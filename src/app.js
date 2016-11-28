@@ -9,6 +9,26 @@ var temporaryPostArray = [];
 var noMorePagesOfLikes = false;
 var noMorePagesOfPosts = false;
 
+var AWS = require('aws-sdk');
+
+var s3 = new AWS.S3();
+
+ s3.createBucket({Bucket: 'myBucket'}, function() {
+
+  var params = {Bucket: 'myBucket', Key: 'myKey', Body: 'Hello!'};
+
+  s3.putObject(params, function(err, data) {
+
+      if (err)
+
+          console.log(err)
+
+      else       console.log("Successfully uploaded data to myBucket/myKey");
+
+   });
+
+});
+
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
   var vars = query.split('&');
