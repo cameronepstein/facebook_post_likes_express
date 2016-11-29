@@ -1,11 +1,13 @@
 var facebookKey = config.FACEBOOK_KEY;
 
 // ASSIGN QUERY TO VARIABLE
-var likePage = getQueryVariable("likePage");
-var sinceDate = getQueryVariable("sinceDate");
+var likePage = getQueryVariable('likePage');
+var sinceDate = getQueryVariable('sinceDate');
 var likeArray = [];
 var postArray = [];
-var noMorePages = false;
+var temporaryPostArray = [];
+var noMorePagesOfLikes = false;
+var noMorePagesOfPosts = false;
 
 function getQueryVariable(variable) {
   var query = window.location.search.substring(1);
@@ -16,125 +18,201 @@ function getQueryVariable(variable) {
       return pair[1];
     }
   }
-  alert("Query Variable " + variable + " not found");
+  alert('Query Variable ' + variable + ' not found');
 }
-console.log("Page Search: " + likePage);
-console.log("Since: " + sinceDate)
+console.log('Page Search: ' + likePage);
+console.log('Since: ' + sinceDate)
 
 // FIND DATA FOR DOJOAPP FACEBOOK PAGE POSTS SINCE CHOSEN DATE
 
 $(document).ready(function() {
-  getPostLikes().then(function() {
-  pageThroughLikes(postArray, test)
- });
+  getPostLikes();
 });
 
-function test(postArray) {
+function convertAndDownloadCSV(callback) {
+  console.log('Converting');
   var convertedPostCSV = convertArrayOfObjectsToCSV(postArray);
   downloadCSV(convertedPostCSV);
+  callback;
 }
 
-function getPostLikes(response) {
-  return new Promise(function (fulfill, reject) {
-    $.get("https://graph.facebook.com/v2.8/"+ likePage + "?fields=access_token,posts.since(" + sinceDate + "){likes{id}}&access_token=" + facebookKey, function (facebookData) {
+function getPostLikes(response, callback) {
+  console.log('getting post likes')
+    $.get('https://graph.facebook.com/v2.8/'+ likePage + '?fields=access_token,posts.since(' + sinceDate + '){likes{id}}&access_token=' + facebookKey, function (facebookData) {
       var likePageId = facebookData.id;
       var testPostArray = [];
-      if ('posts' in facebookData) {
-        var nextPage = facebookData.posts.paging.next;
-        var check = 0;
-        postArray.push(facebookData.posts.data);
-        var currentDataLength = " "
-        var i = 0
-        if ('paging' in facebookData.posts) {
-          console.log("new page available");
-          do {
-            $.ajax({
-              async: false,
-              type: "GET",
-              url: nextPage,
-              success: function(nextPageData) {
-                console.log("New Post Page Accessed: " + nextPage)
-                i++;
-                console.log("Paging Through Posts: " + i)
-                testPostArray.push(nextPageData.data);
-                if ('paging' in nextPageData) {
-                  nextPage = nextPageData.paging.next;
-                  console.log("next page assigned: " + nextPage);
-                }
-                currentDataLength = nextPageData.data.length;
-                console.log(currentDataLength);
-              }
-            });
-            console.log("DATA LENGTH: " + currentDataLength);
-          } while (currentDataLength > 0);
-          testPostArray.forEach(function(element) {
-            // console.log(element)
-            postArray.push(element);
-            fulfill();
-          });
-        }
-      } else {
-        console.log('Error: No facebook posts since this date!')
-        reject();
-      }
-      // console.log(postArray)
+      console.log(facebookData)
+      checkForPostPages(facebookData, noMorePagesOfPosts, checkForData(facebookData));
     });
-  })
 };
 
-
-function pageThroughLikes(facebookPostArray, callback) {
- console.log('paging through likes')
- var testArray = []
- var promiseList = [];
-
-   facebookPostArray.forEach(function(array) {
-     array.forEach(function(innerObject) {
-       if ('likes' in innerObject && 'paging' in innerObject.likes && 'next' in innerObject.likes.paging) {
-       var nextPage = innerObject.likes.paging.next;
-       console.log('new likes page assigned: ' + nextPage);
-       var currentPostId = innerObject.id;
-       var i = 0;
-       console.log(postArray.length)
-       var pageData = '';
-
-       function doAjaxRequest() {
-         console.log(noMorePages)
-         if (noMorePages) {
-                 callback();
-              return;
-            }
-
-         $.ajax({
-           url: nextPage,
-           success: function(nextPageLikeData) {
-             pageData = nextPageLikeData;
-             createLikeObject(nextPageLikeData, currentPostId, checkForPagesOfLikes, nextPageLikeData, noMorePages)
-           },
-           complete: function() {
-             console.log('checking for more pages')
-             if ('paging' in pageData && 'next' in pageData.paging) {
-               nextPage = pageData.paging.next;
-               console.log('assigned next page of likes: ' + nextPage )
-               doAjaxRequest();
-             }
-             else {
-               noMorePages = true;
-               doAjaxRequest();
-             }
-           }
-         })
-        }
-        doAjaxRequest();
-       }
-     })
-   });
+function checkForData(facebookData, callback) {
+  console.log('checking for data')
+  if ('posts' in facebookData) {
+    postArray.push(facebookData.posts.data)
+    console.log('moved current data to postArray')
+  }
+  if ('paging' in facebookData.posts && 'next' in facebookData.posts.paging) {
+    nextPage = facebookData.posts.paging.next
+    console.log('assigned new page of data')
+  }
+  else {
+    console.log('This page has not posted since your specified date.')
+  }
 }
 
-function createLikeObject(likeData, postId, callback, args, fail) {
+function checkForPostPages(data, noPages, callback) {
+  console.log('checking for new pages');
+  if ('paging' in data.posts && 'next' in data.posts.paging) {
+    console.log('NEW PAGE FOUND')
+    noMorePagesOfPosts = false;
+    pageThroughPosts();
+  }
+  else {
+    noMorePagesOfPosts = true;
+    console.log('NO MORE PAGES FOR CURRENT DATA TYPE');
+    return;
+  }
+}
+
+function pageThroughPosts(callback) {
+  if (noMorePagesOfPosts) {
+    console.log('stop ajaxing for posts')
+    return;
+  }
+  if (noMorePagesOfPosts == false) {
+    console.log('ajaxing for posts')
+    ajaxForPosts();
+  }
+  callback;
+}
+
+function ajaxForPosts(callback) {
+  $.ajax({
+    url: nextPage,
+    success: function(nextPagePostData) {
+      pageData = nextPagePostData;
+      if (nextPagePostData.data.length != 0 ) {
+        console.log('pushing more posts to array')
+        pushToArray(nextPagePostData.data, postArray);
+      } else {
+        console.log('Successfully found all posts')
+        getLikes(postArray);
+      }
+    },
+    complete: function() {
+      if ('paging' in pageData && 'next' in pageData.paging) {
+        nextPage = pageData.paging.next;
+        ajaxForPosts();
+      }
+      else {
+        noMorePagesOfPosts = true;
+        return;
+        console.log('finished ajax for posts!')
+      }
+    }
+  })
+}
+
+function callbackTest(callback) {
+  console.log(' >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> !!!!!!!!!! testing time for callback - Final function this should be')
+  callback;
+}
+
+// PAGE THROUGH LIKES FOR EACH OBJECT IN POST ARRAY
+function checkForEndOfProcess() {
+  return new Promise(function(resolve, reject) {
+    function x(num) {
+      num * 2000
+    };
+    console.log(num);
+    if(num > 0) {
+      resolve('x is the right amount')
+    }
+    else {
+      reject(Error('Somethings gone horribly wrong'));
+    }
+  })
+}
+
+
+function getLikes(facebookPostArray, callback) {
+ console.log('paging through likes')
+ console.log(facebookPostArray)
+ var testArray = []
+ var promiseList = [];
+ var counter = 0;
+
+   facebookPostArray.forEach(function(array) {
+     counter += 1;
+     array.forEach(function(innerObject) {
+      var currentPostId = innerObject.id;
+      pageThroughLikes(innerObject, currentPostId, noMorePagesOfLikes(innerObject));
+      function noMorePagesOfLikes(data) {
+        if ('likes' in data && 'paging' in data.likes && 'next' in data.likes.paging) {
+          nextPageOfLikes = data.likes.paging.next;
+          console.log('no more pages of likes = false')
+          return false;
+        } else {
+          return true;
+        }
+      }
+     })
+   });
+   console.log(counter);
+  callback;
+}
+
+
+function pageThroughLikes(data, currentPostId, likePageChecker) {
+  console.log('running PageThroughLikes function')
+  if (likePageChecker == true) {
+    console.log('stop ajaxing for likes')
+    return;
+  }
+  if (likePageChecker == false) {
+    ajaxForLikes(currentPostId);
+    console.log(currentPostId)
+  }
+}
+
+function ajaxForLikes(currentPostId, callback) {
+  console.log('ajaxing for likes')
+  $.ajax({
+    url: nextPageOfLikes,
+    success: function(pageData) {
+      console.log('rightmalove')
+      nextPageLikeData = pageData;
+      if (nextPageLikeData.data.length != 0 ) {
+        createLikeObject(nextPageLikeData, currentPostId)
+        console.log('pushed more data to postarray')
+      };
+    },
+    complete: function() {
+      if ('paging' in nextPageLikeData && 'next' in nextPageLikeData.paging) {
+        nextPageOfLikes = nextPageLikeData.paging.next;
+        ajaxForLikes(currentPostId);
+      }
+      else {
+        noMorePagesOfLikes = true;
+        console.log('finished ajax for likes!')
+        convertAndDownloadCSV();
+        return;
+      }
+    }
+  })
+  callback;
+}
+
+
+function createLikeObject(likeData, postId, callback) {
   likeArrayFormat = [];
   likeObject = {};
   likeObject.likes = {};
+  likeObject.likes.paging = {};
+  if ('paging' in likeData && 'next' in likeData.paging) {
+    likeObject.likes.paging.next = likeData.paging.next;
+  }
   likeObject.id = postId;
   likeObject.likes.data = []
   likeData.data.forEach(function(like) {
@@ -142,24 +220,27 @@ function createLikeObject(likeData, postId, callback, args, fail) {
   });
   likeArrayFormat.push(likeObject);
   postArray.push(likeArrayFormat);
-  console.log('pushed new like data to postArray')
-  callback(args, fail)
+  console.log('pushing new like data to postArray')
+  callback;
 }
 
 function pushToArray(item, array, callback) {
   array.push(item);
-  callback()
+  callback
 }
 
-function checkForPagesOfLikes(data, noPages) {
+
+function checkForLikePages(data, noPages, callback) {
+  console.log('checking for new pages');
   if ('paging' in data && 'next' in data.paging) {
-    console.log('NEW PAGE OF LIKES FOUND')
+    console.log('NEW PAGE FOUND')
     noPages = false;
+    callback;
   }
   else {
     noPages = true;
-    console.log(noPages)
-    console.log('NO MORE PAGES OF LIKES FOR CURRENT OBJECT')
+    console.log('NO MORE PAGES FOR CURRENT DATA TYPE');
+    callback;
   }
 }
 
@@ -193,7 +274,7 @@ function checkForPagesOfLikes(data, noPages) {
     lineDelimiter = args.lineDelimiter || '\n';
     keys = Object.keys(data[0]);
     result = '';
-    result += "user_id" + columnDelimiter + " post_id" + columnDelimiter + " page_id";
+    result += 'user_id' + columnDelimiter + ' post_id' + columnDelimiter + ' page_id';
     result += lineDelimiter;
 
     args.forEach(function(object) {
@@ -201,6 +282,7 @@ function checkForPagesOfLikes(data, noPages) {
         object.forEach(function(item) {
           if ('likes' in item && 'data' in item.likes) {
             var postId = item.id;
+            if (item.id == undefined) {console.log(result)}
             item.likes.data.forEach(function(likeId) {
               if ('id' in likeId) {
                 var likeArray = likeId;
